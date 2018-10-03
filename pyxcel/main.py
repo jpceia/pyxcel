@@ -31,3 +31,7 @@ def list_udf():
 @app.route("/echo/<string:message>")
 def echo(message):
     return message
+
+
+if __name__ == "__main__":
+    app.run(debug=True, use_reloader=False)
