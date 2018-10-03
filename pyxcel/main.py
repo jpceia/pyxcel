@@ -1,4 +1,4 @@
-from pyxcel import *
+import pyxcel as pyx
 from flask import Flask
 import inspect
 import json
@@ -10,18 +10,21 @@ app = Flask(__name__)
 
 @app.route("/query/<string:foo>/<string:args>")
 def query(foo, args):
-    assert foo in udf_dico
+    assert foo in pyx.udf_dico
     args = json.loads(args)
-    ret = json.dumps(udf_dico[foo](*args))
+    ret = json.dumps(pyx.udf_dico[foo](*args))
     return ret
 
 
-@app.route("/udf_list/")
+@app.route("/list_udf/")
 def list_udf():
-    global udf_dico
     dico = dict()
-    for name, foo in udf_dico.items():
-        dico[name] = inspect.getargspec(foo).args
+    for name, foo in pyx.udf_dico.items():
+        detail = dict()
+        detail['args'] = inspect.getargspec(foo).args
+        if foo.__doc__ is not None:
+            detail['doc'] = foo.__doc__
+        dico[name] = detail
     return json.dumps(dico)
 
 
