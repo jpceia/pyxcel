@@ -1,5 +1,5 @@
 import pyxcel as pyx
-from flask import Flask
+from flask import Flask, request
 import inspect
 import json
 
@@ -8,15 +8,15 @@ import test
 app = Flask(__name__)
 
 
-@app.route("/query/<string:foo>/<string:args>")
-def query(foo, args):
-    assert foo in pyx.udf_dico
-    args = json.loads(args)
-    ret = json.dumps(pyx.udf_dico[foo](*args))
-    return ret
+@app.route("/query", methods=["GET", "POST"])
+def query():
+    response = request.json
+    foo = pyx.udf_dico[response["foo"]]
+    args = response.get("args", ())
+    return json.dumps(foo(*args))
 
 
-@app.route("/list_udf/")
+@app.route("/list_udf")
 def list_udf():
     dico = dict()
     for name, foo in pyx.udf_dico.items():
