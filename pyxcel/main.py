@@ -25,15 +25,14 @@ class Capturing(list):
 @app.route("/import", methods=["POST"])
 def import_files():
     paths = request.json
+    path_list = []
     for path in paths:
-        folder, file = os.path.split(path)
-        if folder not in sys.path:
-            sys.path.insert(0, folder)
-        if file.endswith(".py"):
-            __import__(file[:-3])
-        else:
-            msg = "{} is an invalid filename for a python module."
-            print(msg.format(file))
+        filedir, filename = os.path.split(path)
+        if not os.path.isdir(filedir):
+            msg = "{} is an invalid directory".format(filedir)
+        if not file.endswith(".py"):
+            msg = "{} is an invalid python file".format(filename)
+        pyx.add_module(filedir, filename[:-3])
 
 
 @app.route("/eval", methods=["POST"])
@@ -46,7 +45,7 @@ def eval():
 
 @app.route("/signatures")
 def signatures():
-    return jsonify(pyx.udf_signatures())
+    return jsonify(pyx.signatures())
 
 
 @app.route("/echo/<string:message>")

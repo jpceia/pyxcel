@@ -1,4 +1,5 @@
 import inspect
+import sys
 
 udf_dico = dict()
 VBA_NAMES = [
@@ -15,8 +16,13 @@ def export(foo):
     return foo
 
 
+def import_module(dirname, filename):
+    sys.path.insert(0, dirname)
+    __import__(filename[:-3])
+    del sys.path[0]
 
-def udf_signatures():
+
+def signatures():
     dico = dict()
     for name, foo in udf_dico.items():
         detail = dict()
