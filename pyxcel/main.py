@@ -52,8 +52,8 @@ def signatures():
 def echo(message):
     return message
 
-@app.route("/exec", methods=["POST"])
-def execute_python():
+@app.route("/execute", methods=["POST"])
+def execute():
     s = request.json["command"]
     with Capturing() as output:
         exec(s)
