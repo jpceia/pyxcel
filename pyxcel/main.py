@@ -25,7 +25,6 @@ class Capturing(list):
 @app.route("/import", methods=["POST"])
 def import_files():
     query = request.json
-    print(query)
     xldir = query['dir']
     files = query['files']
     for file in files:

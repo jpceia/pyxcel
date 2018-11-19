@@ -23,7 +23,6 @@ def import_module(path):
         raise "{} doesn't exist".format(path)
     folder, file = os.path.split(path)
     mod, e = os.path.splitext(file)
-    print(folder, file, mod, e)
     if e != ".py":
         raise "invalid file extension - needs to be .py"
     sys.path.insert(0, folder)
