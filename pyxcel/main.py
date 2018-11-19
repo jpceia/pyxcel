@@ -6,7 +6,7 @@ try:
 except ImportError:
     from io import StringIO
 
-import test
+#import test
 
 app = Flask(__name__)
 
@@ -24,15 +24,15 @@ class Capturing(list):
 
 @app.route("/import", methods=["POST"])
 def import_files():
-    paths = request.json
-    path_list = []
-    for path in paths:
-        filedir, filename = os.path.split(path)
-        if not os.path.isdir(filedir):
-            msg = "{} is an invalid directory".format(filedir)
-        if not file.endswith(".py"):
-            msg = "{} is an invalid python file".format(filename)
-        pyx.add_module(filedir, filename[:-3])
+    query = request.json
+    print(query)
+    xldir = query['dir']
+    files = query['files']
+    for file in files:
+        if not os.path.isabs(file):
+            file = xldir + "\\" + file
+        pyx.import_module(file)
+    return "ok"
 
 
 @app.route("/eval", methods=["POST"])

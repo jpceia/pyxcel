@@ -1,7 +1,7 @@
 from docstring_parser import parse
 from collections import OrderedDict
 import inspect
-import sys
+import os, sys
 
 udf_dico = dict()
 VBA_NAMES = [
@@ -12,15 +12,22 @@ VBA_NAMES = [
 
 def export(foo):
     foo_name = foo.__name__
-    assert foo_name not in udf_dico
+    #assert foo_name not in udf_dico
     assert foo_name not in VBA_NAMES
     udf_dico[foo.__name__] = foo
     return foo
 
 
-def import_module(dirname, filename):
-    sys.path.insert(0, dirname)
-    __import__(filename[:-3])
+def import_module(path):
+    if not os.path.exists(path):
+        raise "{} doesn't exist".format(path)
+    folder, file = os.path.split(path)
+    mod, e = os.path.splitext(file)
+    print(folder, file, mod, e)
+    if e != ".py":
+        raise "invalid file extension - needs to be .py"
+    sys.path.insert(0, folder)
+    __import__(mod)
     del sys.path[0]
 
 
