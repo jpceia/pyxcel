@@ -1,28 +1,25 @@
 import pyxcel as pyx
+import argparse
 from flask import Flask, request, jsonify
 import os, sys
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
 
 app = Flask(__name__)
 
 
-@app.route("/import", methods=["POST"])
+@app.route("/import", methods=["GET", "POST"])
 def import_files():
     query = request.json
     xldir = query['dir']
     file = query['file']
     try:
         pyx.import_module(xldir, file)
-        return '1'
+        return "True"
     except ValueError as e:
         print(e)
-        return '0'
+        return "False"  # use NaN instead?
 
 
-@app.route("/eval", methods=["POST"])
+@app.route("/eval", methods=["GET", "POST"])
 def eval():
     query = request.json
     foo_name = query["foo"]
@@ -40,11 +37,19 @@ def echo(message):
     return message
 
 
-@app.route("/execute", methods=["POST"])
+@app.route("/execute", methods=["GET", "POST"])
 def execute():
     commands = request.json['command']
     return jsonify(pyx.execute(commands))
 
 
 if __name__ == "__main__":
-    app.run(debug=True, use_reloader=False)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--host',   help='Host', type=str, default="0.0.0.0")
+    parser.add_argument('--port',   help='Port', type=int, default=5555)
+    parser.add_argument('-m', '--modules', help='Module(s)', type=str, nargs='*', default=[])
+    args = parser.parse_args()
+    root_folder = os.getcwd()
+    for module in args.modules:
+        pyx.import_module(root_folder, module)
+    app.run(host=args.host, port=args.port, use_reloader=True, debug=True)
