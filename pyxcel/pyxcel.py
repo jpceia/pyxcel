@@ -5,6 +5,11 @@ import pandas as pd
 import numpy as np
 import inspect
 import os, sys
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
+
 
 UDF_DICO = dict()
 VBA_NAMES = [
@@ -72,6 +77,7 @@ def import_module(root, file):
     m = __import__(mod)
     reload(m)
     sys.path.pop(0)
+    print("Imported:", m)
 
 
 def signatures():
@@ -95,11 +101,9 @@ def eval(foo_name, *args):
     res = foo(*args)
 
     if isinstance(res, pd.Series):
-        res = np.column_stack((res.index, res)).to_list()
+        res = np.column_stack((res.index, res)).tolist()
     elif isinstance(res, pd.DataFrame):
-        res = np.row_stack((
-            np.concatenate(([res.index.name], res.columns)),
-            np.column_stack((res.index, res)))).to_list()
+        res = res.fillna("").values.tolist()
     elif isinstance(res, np.ndarray):
         res = res.tolist()
 
@@ -107,7 +111,6 @@ def eval(foo_name, *args):
 
 
 def execute(commands):
-    s = request.json["command"]
     with Capturing() as output:
-        exec(s)
+        exec(commands)
     return output
