@@ -21,13 +21,7 @@ def subtract(x, y):
 
 @export
 def reshape(x, n, m):
-    x = np.array(x).flatten().tolist()
-    res = []
-    for i in range(n):
-        row = []
-        for j in range(m):
-            row.append(x[i * n + j])
-        res.append(row)
+    res = np.array(x, dtype='object').reshape(n, m).tolist()
     return res
 
 @export
