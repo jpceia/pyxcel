@@ -1,5 +1,6 @@
 import pyxcel as pyx
 import sklearn.linear_model
+import sklearn.cluster
 #import sklearn.ensemble
 import numpy as np
 import re
@@ -14,27 +15,34 @@ MODEL_CATALOG = {
     'ridgeregression': sklearn.linear_model.Ridge,
     #'randomforestclassifier': sklearn.ensemble.RandomForestClassifier,
     #'extratreesclassifier': sklearn.ensemble.ExtraTreesClassifier,
+    'kmeans': sklearn.cluster.KMeans,
 }
 
 
-def load_model(model):
-    if model not in GLOBAL_VARS:
+def load_model(tag):
+    tag = sanitize_tag(tag)
+    if tag not in GLOBAL_VARS:
         raise ValueError
-    return GLOBAL_VARS[model]
+    return GLOBAL_VARS[tag]
+
+
+def sanitize_tag(tag):
+    return re.sub(r"\W+", "", tag.lower())
 
 
 @pyx.export
-def ML_Load(name, model_type, params):
+def ML_Load(tag, model_type, params):
     """
     Loads a model
 
-    :param name: First argument to be added
-    :param model_type: model type to use
+    :param tag string: tag for the new model
+    :param model_type string: model type to use
     :param params: params to use
     """
-    model_type = re.sub(r"\W+", "", model_type.lower())
+    tag = sanitize_tag(tag)
+    model_type = sanitize_tag(model_type)
     if model_type not in MODEL_CATALOG:
-        raise ValueError
+        raise ValueError("Model not available")
     kwargs = dict()
     for row in params:
         key = row[0]
@@ -43,34 +51,59 @@ def ML_Load(name, model_type, params):
             kwargs[key] = value
     model = MODEL_CATALOG[model_type](**kwargs)
     global GLOBAL_VARS
-    GLOBAL_VARS[name] = model
-    return name
+    GLOBAL_VARS[tag] = model
+    return tag
 
 
 @pyx.export
-def ML_Fit(name, X, y):
-    model = load_model(name)
-    X = np.array(X)
-    y = np.array(y)
-    if y.ndim > 1:   # really necessary?
-        y = y[:, 0]  #
+def ML_Fit(tag, X, y):
+    """
+    Loads a model
+
+    :param tag string: tag for loaded model
+    :param X: features
+    :param y: labels
+    """
+    tag = sanitize_tag(tag)
+    model = load_model(tag)
+    X = np.asarray(X, dtype=np.float64)
+    y = np.asarray(y, dtype=np.float64)
+    if X.ndim == 1:
+        X = X.reshape((-1, 1))
+    if y.ndim > 1:
+        y = y[:, 0]
     model.fit(X, y)
-    return name
+    return tag
 
 
 @pyx.export
-def ML_Predict(name, X):
-    model = load_model(name)
-    return model.predict(np.array(X))
+def ML_Predict(tag, X):
+    """
+    Predicts labels given features and a fitted model
+
+    :param tag string: tag for loaded model
+    :param X: features
+    """
+    tag = sanitize_tag(tag)
+    model = load_model(tag)
+    return model.predict(np.asarray(X, dtype=np.float64))
 
 
 @pyx.export
-def ML_Transform(name, X):
-    model = load_model(name)
-    return model.transform(np.array(X))
+def ML_Transform(tag, X):
+    """
+    transforms features given a fitted model
+
+    :param tag string: tag for loaded model
+    :param X: features
+    """
+    tag = sanitize_tag(tag)
+    model = load_model(tag)
+    return model.transform(np.asarray(X, dtype=np.float64))
 
 
 @pyx.export
-def ML_Coef(name, coef):
-    model = load_model(name)
+def ML_Coef(tag, coef):
+    tag = sanitize_tag(tag)
+    model = load_model(tag)
     return getattr(model, coef + "_")
