@@ -1,46 +1,63 @@
+import os, sys
 import pyxcel as pyx
 import argparse
 from flask import Flask, request, jsonify
-import os, sys
+from functools import wraps
 
 app = Flask(__name__)
 
 
+def api_call(foo):
+    @wraps(foo)
+    def wrapper(*args):
+        res = {}
+        try:
+            kwargs = request.json
+            if kwargs is None:
+                kwargs = {}
+            res['result'] = foo(*args, **kwargs)
+            res['success'] = True
+        except Exception as err:
+            print(err)
+            res['success'] = False
+            res['error'] = {
+                'type': type(err).__name__,
+                'code': getattr(err, 'code', 0),
+                'message': getattr(err, 'description', '')
+            }
+        return jsonify(res)
+    return wrapper
+
+
 @app.route("/import", methods=["GET", "POST"])
-def import_files():
-    query = request.json
-    xldir = query['dir']
-    file = query['file']
-    try:
-        pyx.import_module(xldir, file)
-        return "True"
-    except ValueError as e:
-        print(e)
-        return "False"  # use NaN instead?
+@api_call
+def import_files(**kwargs):
+    return pyx.import_module(kwargs['dir'], kwargs['file'])
 
 
 @app.route("/eval", methods=["GET", "POST"])
-def eval():
-    query = request.json
-    foo_name = query["foo"]
-    args = query.get("args", ())
-    return jsonify(pyx.eval(foo_name, *args))
+@api_call
+def eval(**kwargs):
+    foo_name = kwargs["foo"]
+    args = kwargs.get("args", ())
+    return pyx.eval(foo_name, *args)
 
 
-@app.route("/signatures")
-def signatures():
-    return jsonify(pyx.signatures())
+@app.route("/signatures", methods=["GET", "POST"])
+@api_call
+def signatures(**kwargs):
+    return pyx.signatures()
+
+
+@app.route("/execute", methods=["GET", "POST"])
+@api_call
+def execute(**kwargs):
+    return pyx.execute(kwargs["command"])
 
 
 @app.route("/echo/<string:message>")
 def echo(message):
     return message
-
-
-@app.route("/execute", methods=["GET", "POST"])
-def execute():
-    commands = request.json['command']
-    return jsonify(pyx.execute(commands))
 
 
 if __name__ == "__main__":

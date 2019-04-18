@@ -66,7 +66,7 @@ def export(foo):
 
 def import_module(root, file):
     if not os.path.isabs(file):
-        file = root + "\\" + file
+        file = os.path.join(root, file)
     if not os.path.exists(file):
         raise ValueError("{} doesn't exist".format(file))
     folder, file = os.path.split(file)
@@ -78,10 +78,11 @@ def import_module(root, file):
     reload(m)
     sys.path.pop(0)
     print("Imported:", m)
+    return True
 
 
 def signatures():
-    dico = dict()
+    res = dict()
     for name, foo in UDF_DICO.items():
         doc = DocString(foo)
         detail = dict()
@@ -91,8 +92,8 @@ def signatures():
         if doc.return_type:
             detail['type'] = doc.return_type
         detail['args'] = doc.args
-        dico[name] = detail
-    return dico
+        res[name] = detail
+    return res
 
 
 def eval(foo_name, *args):
