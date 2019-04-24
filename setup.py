@@ -1,7 +1,7 @@
-import os
-import sys
+import os, sys
 import imp
 import winreg
+from win32com.client import Dispatch
 from setuptools import setup
 from setuptools.command.install import install as _install
 
@@ -13,24 +13,20 @@ __version__ = '1.0.2'
 here = os.path.dirname(os.path.abspath(__file__))
 
 
-with open("requirements.txt") as f:
+with open(os.path.join(here, "requirements.txt")) as f:
     required = f.read().splitlines()
 
 
-with open("README.md") as f:
+with open(os.path.join(here, "README.md")) as f:
     __doc__ = f.read()
 
 
 def createShortcut(path, target='', wDir='', icon=''):
-    from win32com.client import Dispatch
     shell = Dispatch('WScript.Shell')
     shortcut = shell.CreateShortCut(path)
     shortcut.Targetpath = target
     shortcut.WorkingDirectory = wDir
-    if icon == '':
-        pass
-    else:
-        shortcut.IconLocation = icon
+    shortcut.IconLocation = icon
     shortcut.save()
 
 

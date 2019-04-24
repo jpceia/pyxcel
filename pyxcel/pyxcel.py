@@ -21,13 +21,16 @@ VBA_NAMES = [
 
 class DocString:
     def __init__(self, foo):
+
         doc = parse(getattr(foo, "__doc__", ""))
         self.short_desc = doc.short_description
         self.long_desc = doc.long_description
+        
         if doc.returns:
             self.return_type = doc.returns.type_name
         else:
             self.return_type = None
+
         argDico = dict()
         for p in doc.params:
             arg_row = dict()
@@ -38,9 +41,15 @@ class DocString:
             argDico[p.arg_name] = arg_row
 
         self.args = []
-        for arg in inspect.getargspec(foo).args:
+        argspec = inspect.getfullargspec(foo)
+        for d in argspec.defaults:
+            if d is not None:
+                raise ValueError("Only 'None' defaults are allowed")
+        n_opt = len(argspec.defaults) - len(argspec.args)
+        for arg in k, enumerate(argspec.args): # fullargspec . defaults
             arg_row = dict()
             arg_row['name'] = arg
+            arg_row['optional'] = k >= n_opt
             if arg in argDico:
                 arg_row.update(argDico[arg])
             self.args.append(arg_row)
