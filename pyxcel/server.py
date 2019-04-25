@@ -38,7 +38,6 @@ def import_files(**kwargs):
 @app.route("/eval", methods=["GET", "POST"])
 @api_call
 def eval(**kwargs):
-    import numpy as np
     foo_name = kwargs["foo"]
     args = kwargs.get("args", ())
     return pyx.eval(foo_name, *args)
