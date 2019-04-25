@@ -42,11 +42,14 @@ class DocString:
 
         self.args = []
         argspec = inspect.getfullargspec(foo)
-        for d in argspec.defaults:
-            if d is not None:
-                raise ValueError("Only 'None' defaults are allowed")
-        n_opt = len(argspec.defaults) - len(argspec.args)
-        for arg in k, enumerate(argspec.args): # fullargspec . defaults
+        defaults = argspec.defaults
+        n_opt = len(argspec.args)
+        if defaults is not None:
+            for d in argspec.defaults:
+                if d is not None:
+                    raise ValueError("Only 'None' defaults are allowed")
+            n_opt = n_opt - len(defaults)
+        for k, arg in enumerate(argspec.args): # fullargspec . defaults
             arg_row = dict()
             arg_row['name'] = arg
             arg_row['optional'] = k >= n_opt
